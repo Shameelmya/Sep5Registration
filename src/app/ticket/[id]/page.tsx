@@ -40,7 +40,17 @@ export default function Ticket() {
   const handleDownload = async () => {
     if (ticketRef.current) {
       // Use scale 4 for high quality and solid background to prevent WhatsApp from making transparent corners black
-      const canvas = await html2canvas(ticketRef.current, { scale: 4, backgroundColor: '#f0fdf4' });
+      const canvas = await html2canvas(ticketRef.current, { 
+        scale: 4, 
+        backgroundColor: '#f0fdf4',
+        onclone: (clonedDoc) => {
+          const el = clonedDoc.getElementById('export-ticket');
+          if (el) {
+            el.style.width = '340px';
+            el.style.maxWidth = '340px';
+          }
+        }
+      });
       const image = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = image;
@@ -51,7 +61,17 @@ export default function Ticket() {
 
   const handleShare = async () => {
     if (ticketRef.current && navigator.share) {
-      const canvas = await html2canvas(ticketRef.current, { scale: 4, backgroundColor: '#f0fdf4' });
+      const canvas = await html2canvas(ticketRef.current, { 
+        scale: 4, 
+        backgroundColor: '#f0fdf4',
+        onclone: (clonedDoc) => {
+          const el = clonedDoc.getElementById('export-ticket');
+          if (el) {
+            el.style.width = '340px';
+            el.style.maxWidth = '340px';
+          }
+        }
+      });
       canvas.toBlob(async (blob) => {
         if (blob) {
           const file = new File([blob], `Ticket_${registration.regNumber}.png`, { type: 'image/png' });
@@ -88,7 +108,7 @@ export default function Ticket() {
 
       {/* TICKET WRAPPER */}
       <div style={{ filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.1))', width: '100%', maxWidth: '340px', marginBottom: '32px' }}>
-        <div ref={ticketRef} style={{ 
+        <div ref={ticketRef} id="export-ticket" style={{ 
           background: 'white', 
           borderRadius: '20px',
           overflow: 'hidden',
