@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { db, auth } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import * as XLSX from 'xlsx';
 
@@ -131,6 +131,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete the registration for ${name}?`)) {
+      try {
+        await deleteDoc(doc(db, 'registrations', id));
+        setRegistrations(prev => prev.filter(r => r.id !== id));
+      } catch (err) {
+        console.error(err);
+        alert("Failed to delete registration.");
+      }
+    }
+  };
+
   if (authLoading) {
     return <div className="container animate-fade-in" style={{ paddingTop: '100px', textAlign: 'center' }}>Loading...</div>;
   }
@@ -239,11 +251,11 @@ export default function AdminDashboard() {
                       {r.status || 'Pending'}
                     </span>
                   </td>
-                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                  <td style={{ padding: '16px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px' }}>
                     {(r.status || 'Pending') === 'Pending' ? (
                       <button 
                         onClick={() => markAttendance(r.id)} 
-                        style={{ background: 'var(--primary)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
+                        style={{ background: 'var(--primary)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer', flex: 1 }}
                       >
                         Mark Attended
                       </button>
@@ -252,12 +264,19 @@ export default function AdminDashboard() {
                         onPointerDown={() => handlePointerDown(r.id, r.status)}
                         onPointerUp={handlePointerUp}
                         onPointerLeave={handlePointerUp}
-                        style={{ background: 'var(--success)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
+                        style={{ background: 'var(--success)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer', flex: 1 }}
                         title="Long press for 3s to revert"
                       >
                         Attended
                       </button>
                     )}
+                    <button 
+                      onClick={() => handleDelete(r.id, r.name)} 
+                      style={{ background: 'var(--danger)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
+                      title="Delete Entry"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
