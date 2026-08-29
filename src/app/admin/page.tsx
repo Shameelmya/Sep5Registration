@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [isRegOpen, setIsRegOpen] = useState(true);
@@ -21,10 +22,13 @@ export default function AdminDashboard() {
   const [showFilter, setShowFilter] = useState(false);
   const [filterSchool, setFilterSchool] = useState('');
   const [filterPosition, setFilterPosition] = useState('');
+  const [filterAttendance, setFilterAttendance] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: '', name: '' });
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editModal, setEditModal] = useState({ isOpen: false, data: null as any });
+  const [editLoading, setEditLoading] = useState(false);
 
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -44,11 +48,13 @@ export default function AdminDashboard() {
   const handleLogin = async (e: any) => {
     e.preventDefault();
     setLoginError('');
+    setLoginLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
       setLoginError("Invalid admin credentials");
     }
+    setLoginLoading(false);
   };
 
   const handleLogout = async () => {
@@ -123,6 +129,7 @@ export default function AdminDashboard() {
   };
 
   const confirmDelete = async () => {
+    setDeleteLoading(true);
     try {
       await deleteDoc(doc(db, 'registrations', deleteModal.id));
       setRegistrations(prev => prev.filter(r => r.id !== deleteModal.id));
@@ -131,10 +138,12 @@ export default function AdminDashboard() {
       console.error(err);
       alert("Failed to delete registration.");
     }
+    setDeleteLoading(false);
   };
 
   const saveEdit = async (e: any) => {
     e.preventDefault();
+    setEditLoading(true);
     try {
       const { id, ...updateData } = editModal.data;
       await updateDoc(doc(db, 'registrations', id), updateData);
@@ -144,6 +153,7 @@ export default function AdminDashboard() {
       console.error(err);
       alert("Failed to update registration.");
     }
+    setEditLoading(false);
   };
 
   if (authLoading) {
@@ -164,7 +174,9 @@ export default function AdminDashboard() {
             <input type="password" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
           {loginError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{loginError}</p>}
-          <button type="submit" className="btn-primary" style={{ marginTop: '8px' }}>Login</button>
+          <button type="submit" disabled={loginLoading} className="btn-primary" style={{ marginTop: '8px', opacity: loginLoading ? 0.7 : 1 }}>
+            {loginLoading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
       </div>
     );
@@ -178,6 +190,10 @@ export default function AdminDashboard() {
   const filteredRegistrations = registrations.filter(r => {
     if (filterSchool && r.school !== filterSchool) return false;
     if (filterPosition && r.position !== filterPosition) return false;
+    if (filterAttendance) {
+      const status = r.status || 'Pending';
+      if (status !== filterAttendance) return false;
+    }
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       if (!r.name?.toLowerCase().includes(term) &&
@@ -281,8 +297,16 @@ export default function AdminDashboard() {
               {uniquePositions.map((p: any) => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
-          {(filterSchool || filterPosition) && (
-            <button onClick={() => { setFilterSchool(''); setFilterPosition(''); }} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', fontSize: '0.9rem', cursor: 'pointer', textAlign: 'right', fontWeight: '600', marginTop: '4px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--secondary-text)', marginBottom: '8px' }}>Filter by Attendance</label>
+            <select className="input-field" value={filterAttendance} onChange={e => setFilterAttendance(e.target.value)} style={{ padding: '12px' }}>
+              <option value="">All Statuses</option>
+              <option value="Attended">Attended</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+          {(filterSchool || filterPosition || filterAttendance) && (
+            <button onClick={() => { setFilterSchool(''); setFilterPosition(''); setFilterAttendance(''); }} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', fontSize: '0.9rem', cursor: 'pointer', textAlign: 'right', fontWeight: '600', marginTop: '4px' }}>
               Clear Filters
             </button>
           )}
@@ -396,8 +420,10 @@ export default function AdminDashboard() {
               Are you completely sure you want to delete the registration for <strong>{deleteModal.name}</strong>? This action cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setDeleteModal({ isOpen: false, id: '', name: '' })} className="btn-secondary" style={{ flex: 1, padding: '14px' }}>Cancel</button>
-              <button onClick={confirmDelete} className="btn-primary" style={{ flex: 1, background: 'var(--danger)', padding: '14px' }}>Confirm</button>
+              <button type="button" disabled={deleteLoading} onClick={() => setDeleteModal({ isOpen: false, id: '', name: '' })} className="btn-secondary" style={{ flex: 1, padding: '14px', opacity: deleteLoading ? 0.7 : 1 }}>Cancel</button>
+              <button type="button" disabled={deleteLoading} onClick={confirmDelete} className="btn-primary" style={{ flex: 1, background: 'var(--danger)', padding: '14px', opacity: deleteLoading ? 0.7 : 1 }}>
+                {deleteLoading ? 'Deleting...' : 'Confirm'}
+              </button>
             </div>
           </div>
         </div>
@@ -435,8 +461,10 @@ export default function AdminDashboard() {
               </div>
               
               <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                <button type="button" onClick={() => setEditModal({ isOpen: false, data: null })} className="btn-secondary" style={{ flex: 1, padding: '14px' }}>Cancel</button>
-                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px' }}>Save Changes</button>
+                <button type="button" disabled={editLoading} onClick={() => setEditModal({ isOpen: false, data: null })} className="btn-secondary" style={{ flex: 1, padding: '14px', opacity: editLoading ? 0.7 : 1 }}>Cancel</button>
+                <button type="submit" disabled={editLoading} className="btn-primary" style={{ flex: 1, padding: '14px', opacity: editLoading ? 0.7 : 1 }}>
+                  {editLoading ? 'Saving...' : 'Save Changes'}
+                </button>
               </div>
             </form>
           </div>
