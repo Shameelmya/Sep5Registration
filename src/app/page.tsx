@@ -61,9 +61,9 @@ export default function Home() {
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
           {timeLeft ? (
             <>
-              <TimeBox value={timeLeft.d} label="Days" color="var(--primary)" />
+              <TimeBox value={timeLeft.d} label="Days" color="linear-gradient(135deg, var(--primary), var(--primary-alt))" />
               <TimeBox value={timeLeft.h} label="Hrs" color="var(--accent)" />
-              <TimeBox value={timeLeft.m} label="Min" color="var(--primary)" />
+              <TimeBox value={timeLeft.m} label="Min" color="linear-gradient(135deg, var(--primary), var(--primary-alt))" />
               <TimeBox value={timeLeft.s} label="Sec" color="var(--accent)" />
             </>
           ) : (
