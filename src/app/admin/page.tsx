@@ -94,7 +94,20 @@ export default function AdminDashboard() {
   };
 
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(registrations);
+    // Map to strictly ordered objects with clean header names
+    const formattedData = registrations.map(r => ({
+      "Reg Number": r.regNumber,
+      "Name": r.name,
+      "Phone Number": r.phone,
+      "WhatsApp": r.whatsapp || r.phone,
+      "Age": r.age,
+      "School": r.school,
+      "Position": r.position,
+      "Status": r.status || "Pending",
+      "Registration Date": r.timestamp ? new Date(r.timestamp).toLocaleString() : ""
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
     XLSX.writeFile(workbook, "MLA_Teachers_Day_Registrations.xlsx");
