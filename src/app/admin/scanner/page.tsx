@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Html5Qrcode } from 'html5-qrcode';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export default function Scanner() {
   const router = useRouter();
@@ -27,94 +27,78 @@ export default function Scanner() {
 
   const startScanner = async () => {
     setError('');
-    setIsScanning(true);
     setScanResult(null);
     setUserData(null);
+    setIsScanning(true);
     
-    try {
-      // Must give a tiny delay to ensure the #reader div is unhidden and painted
-      setTimeout(async () => {
-        try {
-          const html5QrCode = new Html5Qrcode("reader");
-          scannerRef.current = html5QrCode;
+    // Give React time to render the #reader div
+    setTimeout(async () => {
+      try {
+        const html5QrCode = new Html5Qrcode("reader");
+        scannerRef.current = html5QrCode;
 
-          await html5QrCode.start(
-            { facingMode: "environment" },
-            {
-              fps: 10,
-              qrbox: { width: 250, height: 250 }
-            },
-            (decodedText) => {
-              // On success
-              html5QrCode.stop().then(() => {
-                setIsScanning(false);
-                setScanResult(decodedText);
-                fetchUserData(decodedText);
-              }).catch(console.error);
-            },
-            (errorMessage) => {
-              // Ignore frame errors
-            }
-          );
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        const onScanSuccess = (decodedText: string) => {
+          html5QrCode.stop().then(() => {
+            setIsScanning(false);
+            setScanResult(decodedText);
+            fetchUserData(decodedText);
+          }).catch(console.error);
+        };
+
+        // Try environment camera first
+        try {
+          await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, undefined);
         } catch (err) {
-          console.error(err);
-          setIsScanning(false);
-          setError("Failed to start camera. Please check your browser permissions.");
+          // Fallback if environment camera fails
+          await html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, undefined);
         }
-      }, 100);
-    } catch (err) {
-      console.error(err);
-      setIsScanning(false);
-    }
+      } catch (err) {
+        console.error(err);
+        setIsScanning(false);
+        setError("Failed to start camera. Please check your browser permissions.");
+      }
+    }, 200);
   };
 
   const stopScanner = async () => {
     if (scannerRef.current && scannerRef.current.isScanning) {
       try {
         await scannerRef.current.stop();
-        setIsScanning(false);
       } catch (err) {
         console.error(err);
       }
-    } else {
-      setIsScanning(false);
     }
+    setIsScanning(false);
   };
 
   const fetchUserData = async (id: string) => {
     setLoading(true);
     setError('');
     
-    // Remove "MLA-" prefix if it exists because the DB ID might just be "RC9OLD" or the phone number
-    // Actually, in the registration flow, the QR code stores "MLA-XXXX" or just the ID depending on generation.
-    // In page.tsx we did: <QRCodeSVG value={registration.regNumber} /> 
-    // And regNumber is the exact ID! So we query by exact decoded text.
     try {
-      // Quick check to see if it's a valid ID or if it needs prefix stripping
-      let docId = id;
-      // If the user happens to have an old QR that was generated with MLA- prepended but their DB ID doesn't have it:
-      // (Just an extra safety check)
-      
-      const docRef = doc(db, 'registrations', docId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
+      // The QR code contains the Reg Number (e.g., MLA-XXXX)
+      const q = query(collection(db, 'registrations'), where('regNumber', '==', id));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // Found by Reg Number
+        const docSnap = querySnapshot.docs[0];
         setUserData({ id: docSnap.id, ...docSnap.data() });
       } else {
-        // Try stripping 'MLA-' if it failed
-        if (docId.startsWith("MLA-")) {
-            const strippedRef = doc(db, 'registrations', docId.replace("MLA-", ""));
-            const strippedSnap = await getDoc(strippedRef);
-            if(strippedSnap.exists()) {
-               setUserData({ id: strippedSnap.id, ...strippedSnap.data() });
-               setLoading(false);
-               return;
-            }
+        // Fallback: try searching by Document ID just in case it's an old ticket format
+        const docRef = doc(db, 'registrations', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setUserData({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          setError('No registration found for this QR code.');
         }
-        setError('No registration found for this QR code.');
       }
     } catch (err) {
       console.error(err);
-      setError('Error fetching data. Are you connected to Firebase?');
+      setError('Error fetching data. Are you connected to the internet?');
     }
     setLoading(false);
   };
@@ -159,12 +143,14 @@ export default function Scanner() {
       )}
 
       {/* The Scanner Viewport */}
-      <div style={{ display: isScanning ? 'block' : 'none', background: 'black', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
-        <div id="reader" style={{ width: '100%', border: 'none' }}></div>
-      </div>
+      {isScanning && (
+        <div className="animate-fade-in" style={{ background: 'black', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
+          <div id="reader" style={{ width: '100%', border: 'none' }}></div>
+        </div>
+      )}
 
       {isScanning && (
-        <button onClick={stopScanner} className="btn-secondary" style={{ width: '100%', padding: '16px', marginTop: '16px', color: 'var(--danger)', border: '1px solid var(--danger)', background: 'rgba(255,59,48,0.05)' }}>
+        <button onClick={stopScanner} className="btn-secondary animate-fade-in" style={{ width: '100%', padding: '16px', marginTop: '16px', color: 'var(--danger)', border: '1px solid var(--danger)', background: 'rgba(255,59,48,0.05)' }}>
           Cancel Scanning
         </button>
       )}
@@ -172,7 +158,7 @@ export default function Scanner() {
       {loading && <p style={{ textAlign: 'center', marginTop: '24px' }}>Verifying Ticket...</p>}
 
       {error && (
-        <div style={{ backgroundColor: 'rgba(255,59,48,0.1)', color: 'var(--danger)', padding: '16px', borderRadius: 'var(--radius-md)', marginTop: '24px', fontWeight: '500', textAlign: 'center' }}>
+        <div className="animate-fade-in" style={{ backgroundColor: 'rgba(255,59,48,0.1)', color: 'var(--danger)', padding: '16px', borderRadius: 'var(--radius-md)', marginTop: '24px', fontWeight: '500', textAlign: 'center' }}>
           {error}
           <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
              <button onClick={resetScanner} className="btn-secondary" style={{ flex: 1 }}>Back</button>
