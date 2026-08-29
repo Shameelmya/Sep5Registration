@@ -1,31 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --background: #f5f5f7;
-  --foreground: #1d1d1f;
-  --primary: #0071e3;
-  --primary-hover: #0077ED;
-  --secondary: #e8e8ed;
-  --secondary-text: #86868b;
-  --card-bg: rgba(255, 255, 255, 0.7);
-  --border: rgba(0, 0, 0, 0.1);
-  --success: #34c759;
-  --danger: #ff3b30;
-  --radius-lg: 20px;
-  --radius-md: 12px;
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #f5f5f7;
-    --secondary: #1c1c1e;
-    --secondary-text: #a1a1a6;
-    --card-bg: rgba(28, 28, 30, 0.7);
-    --border: rgba(255, 255, 255, 0.1);
-  }
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --primary: #10b981; /* Emerald Green */
+  --primary-alt: #0ea5e9; /* Sky Blue */
+  --accent: #eab308; /* Yellow */
+  --secondary: #ffffff;
+  --secondary-text: #64748b;
+  --card-bg: #ffffff;
+  --border: transparent;
+  --success: #10b981;
+  --danger: #ef4444;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --shadow-sm: 0 4px 15px rgba(0,0,0,0.03);
+  --shadow-md: 0 10px 25px rgba(16, 185, 129, 0.2);
 }
 
 * {
@@ -36,7 +26,9 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--background);
+  /* Beautiful soft professional gradient of Blue, Green, and Yellow */
+  background: linear-gradient(140deg, #e0f2fe 0%, #dcfce7 50%, #fef9c3 100%);
+  background-attachment: fixed;
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
@@ -55,24 +47,25 @@ button {
 }
 
 /* Typography */
-h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; }
+h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--foreground); }
 h2 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
 p { line-height: 1.5; }
 
 /* Utilities */
 .glass {
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  /* Green and Blue mix gradient for button */
+  background: linear-gradient(90deg, var(--primary), var(--primary-alt));
   color: white;
-  padding: 14px 24px;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
+  padding: 18px 24px;
+  border-radius: 9999px; /* Pill shape */
+  font-size: 1.05rem;
   font-weight: 600;
   transition: all 0.2s ease;
   width: 100%;
@@ -80,24 +73,30 @@ p { line-height: 1.5; }
   justify-content: center;
   align-items: center;
   text-decoration: none;
+  box-shadow: var(--shadow-md);
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-hover);
-  transform: scale(0.98);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(14, 165, 233, 0.25);
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
 }
 
 .btn-primary:disabled {
-  background-color: var(--secondary-text);
+  background: #cbd5e1;
+  box-shadow: none;
   cursor: not-allowed;
   transform: none;
 }
 
 .btn-secondary {
   background-color: var(--secondary);
-  color: var(--foreground);
-  padding: 14px 24px;
-  border-radius: var(--radius-md);
+  color: var(--primary-alt);
+  padding: 16px 24px;
+  border-radius: 9999px; /* Pill shape */
   font-size: 1rem;
   font-weight: 600;
   transition: all 0.2s ease;
@@ -106,32 +105,53 @@ p { line-height: 1.5; }
   justify-content: center;
   align-items: center;
   text-decoration: none;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary:hover {
-  filter: brightness(0.95);
-  transform: scale(0.98);
+  background-color: #f8fafc;
+  transform: translateY(-2px);
+}
+
+/* Modern Inputs resembling the uploaded design */
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.input-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 8px;
+  margin-left: 12px;
 }
 
 .input-field {
   width: 100%;
-  padding: 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--background);
+  padding: 16px 20px;
+  border-radius: 9999px; /* Pill shape */
+  border: 2px solid transparent;
+  background: #ffffff;
   color: var(--foreground);
   font-size: 1rem;
-  transition: border-color 0.2s ease;
-  margin-bottom: 16px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 .input-field:focus {
-  border-color: var(--primary);
+  border-color: var(--primary-alt);
   outline: none;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.1);
+}
+
+.input-field::placeholder {
+  color: #94a3b8;
 }
 
 .container {
-  max-width: 600px;
+  max-width: 480px; /* Slightly narrower for perfect mobile feel on desktop */
   margin: 0 auto;
   padding: 24px;
 }

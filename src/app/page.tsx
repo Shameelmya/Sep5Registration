@@ -33,7 +33,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // Fetch registration status from firebase
     const fetchConfig = async () => {
       try {
         const configRef = doc(db, 'config', 'admin');
@@ -49,47 +48,52 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="container animate-fade-in" style={{ textAlign: 'center', paddingTop: '40px' }}>
+    <div className="container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '40px', paddingBottom: '40px' }}>
       
-      {/* Poster Placeholder - Empty block with alt text as requested */}
-      <div style={{ width: '100%', aspectRatio: '1080/1350', backgroundColor: 'var(--secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 'var(--radius-lg)', marginBottom: '32px' }}>
-        <span style={{ color: 'var(--secondary-text)', fontSize: '1.2rem' }}>poster here</span>
-      </div>
-      
-      <h1 style={{ marginBottom: '16px' }}>Teachers Day Programme</h1>
-      
-      {/* Countdown Timer */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '32px' }}>
-        {timeLeft ? (
-          <>
-            <TimeBox value={timeLeft.d} label="Days" />
-            <TimeBox value={timeLeft.h} label="Hours" />
-            <TimeBox value={timeLeft.m} label="Mins" />
-            <TimeBox value={timeLeft.s} label="Secs" />
-          </>
-        ) : (
-          <div style={{ height: '70px', display: 'flex', alignItems: 'center' }}>Loading timer...</div>
-        )}
-      </div>
+      <h1 style={{ marginBottom: '24px', textAlign: 'center', color: '#0f172a' }}>Teachers Day<br/>Programme</h1>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        
+        {/* Countdown Timer */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
+          {timeLeft ? (
+            <>
+              <TimeBox value={timeLeft.d} label="Days" />
+              <TimeBox value={timeLeft.h} label="Hrs" />
+              <TimeBox value={timeLeft.m} label="Min" />
+              <TimeBox value={timeLeft.s} label="Sec" />
+            </>
+          ) : (
+            <div style={{ height: '80px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading timer...</div>
+          )}
+        </div>
+
+        {/* Poster Placeholder - Empty block with alt text as requested */}
+        <div style={{ width: '100%', aspectRatio: '1080/1350', background: 'rgba(255,255,255,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 'var(--radius-lg)' }}>
+          <span style={{ color: 'var(--secondary-text)', fontSize: '1rem', fontWeight: '500' }}>poster here</span>
+        </div>
+
+        {/* Register Button */}
         {isRegOpen ? (
-          <Link href="/register" className="btn-primary" style={{ padding: '18px', fontSize: '1.2rem' }}>
+          <Link href="/register" className="btn-primary" style={{ padding: '20px', fontSize: '1.1rem' }}>
             Register Now
           </Link>
         ) : (
-          <button className="btn-primary" disabled style={{ padding: '18px', fontSize: '1.2rem' }}>
+          <button className="btn-primary" disabled style={{ padding: '20px', fontSize: '1.1rem' }}>
             Registration Closed
           </button>
         )}
 
-        <Link href="/get-pass" className="btn-secondary" style={{ padding: '18px' }}>
-          Get Pass
-        </Link>
-        
-        <a href="https://maps.google.com/?q=MLA+Office" target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: '18px' }}>
-          Location
-        </a>
+        {/* Get Pass & Location Half/Half */}
+        <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+          <Link href="/get-pass" className="btn-secondary" style={{ flex: 1, padding: '16px 0' }}>
+            Get Pass
+          </Link>
+          <a href="https://maps.google.com/?q=MLA+Office" target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ flex: 1, padding: '16px 0' }}>
+            Location
+          </a>
+        </div>
+
       </div>
     </div>
   );
@@ -97,9 +101,9 @@ export default function Home() {
 
 function TimeBox({ value, label }: { value: number, label: string }) {
   return (
-    <div className="glass" style={{ padding: '12px 8px', borderRadius: 'var(--radius-md)', minWidth: '70px' }}>
-      <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '2px' }}>{value.toString().padStart(2, '0')}</div>
-      <div style={{ fontSize: '0.75rem', color: 'var(--secondary-text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+    <div style={{ flex: 1, background: '#ffffff', borderRadius: '16px', padding: '14px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+      <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#0f172a', marginBottom: '2px' }}>{value.toString().padStart(2, '0')}</div>
+      <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>{label}</div>
     </div>
   );
 }

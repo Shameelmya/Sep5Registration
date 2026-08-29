@@ -39,7 +39,6 @@ export default function Register() {
     setError('');
 
     try {
-      // Use phone number as document ID to prevent queries and secure data
       const docRef = doc(db, 'registrations', formData.phone);
       const docSnap = await getDoc(docRef);
 
@@ -49,7 +48,6 @@ export default function Register() {
         return;
       }
 
-      // Generate random unique ID
       const regNumber = "MLA-" + Math.random().toString(36).substr(2, 6).toUpperCase();
 
       await setDoc(docRef, {
@@ -64,73 +62,74 @@ export default function Register() {
 
     } catch (err: any) {
       console.error(err);
-      setError('An error occurred while submitting. Are you connected to Firebase?');
+      setError('An error occurred while submitting. Check Firebase.');
     }
     setLoading(false);
   };
 
   return (
-    <div className="container animate-fade-in" style={{ paddingTop: '40px' }}>
-      <button onClick={() => router.back()} style={{ background: 'transparent', color: 'var(--primary)', fontWeight: '600', marginBottom: '24px', fontSize: '1rem', padding: '0', border: 'none', cursor: 'pointer' }}>
+    <div className="container animate-fade-in" style={{ paddingTop: '40px', paddingBottom: '40px' }}>
+      <button onClick={() => router.back()} style={{ background: 'transparent', color: 'var(--primary-alt)', fontWeight: '600', marginBottom: '24px', fontSize: '1rem', padding: '0', border: 'none', cursor: 'pointer' }}>
         &larr; Back
       </button>
       
-      <h1 style={{ marginBottom: '32px' }}>Registration</h1>
+      <h1 style={{ marginBottom: '32px', textAlign: 'center' }}>Create An Account</h1>
 
       {error && (
-        <div style={{ backgroundColor: 'rgba(255,59,48,0.1)', color: 'var(--danger)', padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: '24px', fontWeight: '500' }}>
+        <div style={{ backgroundColor: '#fee2e2', color: 'var(--danger)', padding: '16px', borderRadius: '16px', marginBottom: '24px', fontWeight: '500', fontSize: '0.9rem', textAlign: 'center' }}>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Full Name</label>
-          <input required type="text" name="name" value={formData.name} onChange={handleChange} className="input-field" placeholder="Enter your full name" />
+      <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+        
+        <div className="input-wrapper">
+          <label className="input-label">Full name</label>
+          <input required type="text" name="name" value={formData.name} onChange={handleChange} className="input-field" placeholder="enter your name" />
         </div>
         
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Phone Number</label>
+        <div className="input-wrapper">
+          <label className="input-label">Phone Number</label>
           <input required type="tel" name="phone" value={formData.phone} onChange={(e) => {
             handleChange(e);
             if(sameAsPhone) setFormData(prev => ({...prev, whatsapp: e.target.value}));
-          }} className="input-field" placeholder="10-digit mobile number" />
+          }} className="input-field" placeholder="enter mobile number" />
         </div>
 
-        <div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: '500', cursor: 'pointer' }}>
-            <input type="checkbox" checked={sameAsPhone} onChange={handleCheckbox} style={{ width: '18px', height: '18px' }} />
+        <div className="input-wrapper">
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginLeft: '12px', fontSize: '0.85rem', fontWeight: '500', color: 'var(--primary)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={sameAsPhone} onChange={handleCheckbox} style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }} />
             WhatsApp number is same as phone
           </label>
           {!sameAsPhone && (
-            <input required type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className="input-field" placeholder="WhatsApp number" />
+            <input required type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className="input-field" placeholder="enter WhatsApp number" />
           )}
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Age</label>
-          <input required type="number" name="age" value={formData.age} onChange={handleChange} className="input-field" placeholder="Your age" />
+        <div className="input-wrapper">
+          <label className="input-label">Age</label>
+          <input required type="number" name="age" value={formData.age} onChange={handleChange} className="input-field" placeholder="enter your age" />
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>School Name</label>
-          <select required name="school" value={formData.school} onChange={handleChange} className="input-field">
-            <option value="" disabled>Select your school</option>
+        <div className="input-wrapper">
+          <label className="input-label">School Name</label>
+          <select required name="school" value={formData.school} onChange={handleChange} className="input-field" style={{ appearance: 'none' }}>
+            <option value="" disabled>select your school</option>
             {schools.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Position</label>
-          <select required name="position" value={formData.position} onChange={handleChange} className="input-field">
-            <option value="" disabled>Select your position</option>
+        <div className="input-wrapper">
+          <label className="input-label">Position</label>
+          <select required name="position" value={formData.position} onChange={handleChange} className="input-field" style={{ appearance: 'none' }}>
+            <option value="" disabled>select your position</option>
             <option value="Head of Institution">Head of Institution</option>
             <option value="ICT Coordinator">ICT Coordinator</option>
           </select>
         </div>
 
-        <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: '16px' }}>
-          {loading ? 'Submitting...' : 'Submit Registration'}
+        <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: '24px' }}>
+          {loading ? 'Submitting...' : 'Sign Up'}
         </button>
       </form>
     </div>
