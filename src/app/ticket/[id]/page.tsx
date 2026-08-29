@@ -57,8 +57,8 @@ export default function Ticket() {
           const file = new File([blob], `Ticket_${registration.regNumber}.png`, { type: 'image/png' });
           try {
             await navigator.share({
-              title: 'My Registration Ticket',
-              text: 'Here is my ticket for the Teachers Day Programme!',
+              title: 'Registration Successful',
+              text: `Registration Successful!\nName: ${registration.name}\nReg No: ${registration.regNumber}\n\nHere is your ticket for the Teachers Day Programme!`,
               files: [file]
             });
           } catch (err) {
