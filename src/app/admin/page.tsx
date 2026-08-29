@@ -21,6 +21,10 @@ export default function AdminDashboard() {
   const [showFilter, setShowFilter] = useState(false);
   const [filterSchool, setFilterSchool] = useState('');
   const [filterPosition, setFilterPosition] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: '', name: '' });
+  const [editModal, setEditModal] = useState({ isOpen: false, data: null as any });
 
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -65,7 +69,6 @@ export default function AdminDashboard() {
       querySnapshot.forEach((doc) => {
         data.push({ id: doc.id, ...doc.data() });
       });
-      // Sort by timestamp descending
       data.sort((a, b) => b.timestamp - a.timestamp);
       setRegistrations(data);
     } catch (err) {
@@ -106,11 +109,10 @@ export default function AdminDashboard() {
       try {
         await updateDoc(doc(db, 'registrations', id), { status: 'Pending' });
         setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status: 'Pending' } : r));
-        alert("Attendance reversed!");
       } catch (err) {
         console.error(err);
       }
-    }, 3000); // 3 seconds long press
+    }, 3000); 
   };
 
   const handlePointerUp = () => {
@@ -120,15 +122,27 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to permanently delete the registration for ${name}?`)) {
-      try {
-        await deleteDoc(doc(db, 'registrations', id));
-        setRegistrations(prev => prev.filter(r => r.id !== id));
-      } catch (err) {
-        console.error(err);
-        alert("Failed to delete registration.");
-      }
+  const confirmDelete = async () => {
+    try {
+      await deleteDoc(doc(db, 'registrations', deleteModal.id));
+      setRegistrations(prev => prev.filter(r => r.id !== deleteModal.id));
+      setDeleteModal({ isOpen: false, id: '', name: '' });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete registration.");
+    }
+  };
+
+  const saveEdit = async (e: any) => {
+    e.preventDefault();
+    try {
+      const { id, ...updateData } = editModal.data;
+      await updateDoc(doc(db, 'registrations', id), updateData);
+      setRegistrations(prev => prev.map(r => r.id === id ? editModal.data : r));
+      setEditModal({ isOpen: false, data: null });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update registration.");
     }
   };
 
@@ -143,23 +157,11 @@ export default function AdminDashboard() {
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: '500' }}>Admin Email</label>
-            <input 
-              type="email" 
-              className="input-field" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
-            />
+            <input type="email" className="input-field" value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: '500' }}>Password</label>
-            <input 
-              type="password" 
-              className="input-field" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              required 
-            />
+            <input type="password" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
           {loginError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{loginError}</p>}
           <button type="submit" className="btn-primary" style={{ marginTop: '8px' }}>Login</button>
@@ -170,18 +172,25 @@ export default function AdminDashboard() {
 
   const attendedCount = registrations.filter(r => r.status === 'Attended').length;
 
-  // Derive unique schools and positions for the dropdowns
   const uniqueSchools = Array.from(new Set(registrations.map(r => r.school))).filter(Boolean);
   const uniquePositions = Array.from(new Set(registrations.map(r => r.position))).filter(Boolean);
 
   const filteredRegistrations = registrations.filter(r => {
     if (filterSchool && r.school !== filterSchool) return false;
     if (filterPosition && r.position !== filterPosition) return false;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      if (!r.name?.toLowerCase().includes(term) &&
+          !r.school?.toLowerCase().includes(term) &&
+          !r.regNumber?.toLowerCase().includes(term)) {
+        return false;
+      }
+    }
     return true;
   });
 
   return (
-    <div className="container animate-fade-in" style={{ paddingTop: '40px', paddingBottom: '80px' }}>
+    <div className="container animate-fade-in" style={{ paddingTop: '40px', paddingBottom: '80px', position: 'relative' }}>
       
       {/* HEADER WITH ICON BUTTONS */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -223,7 +232,7 @@ export default function AdminDashboard() {
             fontWeight: '600',
             cursor: 'pointer',
             border: 'none',
-            background: isRegOpen ? 'var(--success)' : 'var(--danger)', 
+            background: isRegOpen ? 'var(--danger)' : 'var(--success)', 
             color: 'white' 
           }}
         >
@@ -257,7 +266,7 @@ export default function AdminDashboard() {
 
       {/* FILTER PANEL */}
       {showFilter && (
-        <div className="glass" style={{ padding: '20px', borderRadius: 'var(--radius-md)', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="glass" style={{ padding: '20px', borderRadius: 'var(--radius-md)', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--secondary-text)', marginBottom: '8px' }}>Filter by School</label>
             <select className="input-field" value={filterSchool} onChange={e => setFilterSchool(e.target.value)} style={{ padding: '12px' }}>
@@ -280,11 +289,24 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* SEARCH BAR (NO PLACEHOLDER TEXT) */}
+      <div style={{ marginBottom: '24px' }}>
+        <input 
+          type="text" 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder=""
+          className="input-field"
+          style={{ width: '100%', padding: '14px', borderRadius: '12px' }}
+        />
+        <div style={{ fontSize: '0.7rem', color: 'var(--secondary-text)', marginTop: '8px' }}>Search by Name, School, or Reg No</div>
+      </div>
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>Loading data...</div>
       ) : (
         <div className="glass" style={{ borderRadius: 'var(--radius-lg)', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid rgba(0,0,0,0.05)' }}>
                 <th style={{ padding: '16px', textAlign: 'left', color: 'var(--secondary-text)' }}>Reg No</th>
@@ -292,7 +314,7 @@ export default function AdminDashboard() {
                 <th style={{ padding: '16px', textAlign: 'left', color: 'var(--secondary-text)' }}>Phone</th>
                 <th style={{ padding: '16px', textAlign: 'left', color: 'var(--secondary-text)' }}>School</th>
                 <th style={{ padding: '16px', textAlign: 'center', color: 'var(--secondary-text)' }}>Status</th>
-                <th style={{ padding: '16px', textAlign: 'center', color: 'var(--secondary-text)' }}>Action</th>
+                <th style={{ padding: '16px', textAlign: 'center', color: 'var(--secondary-text)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -317,32 +339,43 @@ export default function AdminDashboard() {
                       {r.status || 'Pending'}
                     </span>
                   </td>
-                  <td style={{ padding: '16px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                    {(r.status || 'Pending') === 'Pending' ? (
+                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}>
+                      {(r.status || 'Pending') === 'Pending' ? (
+                        <button 
+                          onClick={() => markAttendance(r.id)} 
+                          style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(52, 199, 89, 0.1)', color: 'var(--success)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Mark Attended"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </button>
+                      ) : (
+                        <button 
+                          onPointerDown={() => handlePointerDown(r.id, r.status)}
+                          onPointerUp={handlePointerUp}
+                          onPointerLeave={handlePointerUp}
+                          style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Attended (Long press 3s to revert)"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </button>
+                      )}
+                      
                       <button 
-                        onClick={() => markAttendance(r.id)} 
-                        style={{ background: 'var(--primary)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer', flex: 1 }}
+                        onClick={() => setEditModal({ isOpen: true, data: { ...r } })} 
+                        style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(0,198,255,0.1)', color: 'var(--primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="Edit Entry"
                       >
-                        Mark Attended
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                       </button>
-                    ) : (
                       <button 
-                        onPointerDown={() => handlePointerDown(r.id, r.status)}
-                        onPointerUp={handlePointerUp}
-                        onPointerLeave={handlePointerUp}
-                        style={{ background: 'var(--success)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer', flex: 1 }}
-                        title="Long press for 3s to revert"
+                        onClick={() => setDeleteModal({ isOpen: true, id: r.id, name: r.name })} 
+                        style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,59,48,0.1)', color: 'var(--danger)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="Delete Entry"
                       >
-                        Attended
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                       </button>
-                    )}
-                    <button 
-                      onClick={() => handleDelete(r.id, r.name)} 
-                      style={{ background: 'var(--danger)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer' }}
-                      title="Delete Entry"
-                    >
-                      Delete
-                    </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -351,6 +384,62 @@ export default function AdminDashboard() {
           {filteredRegistrations.length === 0 && (
             <div style={{ padding: '32px', textAlign: 'center', color: 'var(--secondary-text)' }}>No registrations found.</div>
           )}
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="glass animate-fade-in" style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '100%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '1.4rem' }}>Confirm Deletion</h3>
+            <p style={{ color: 'var(--secondary-text)', marginBottom: '32px', lineHeight: '1.5' }}>
+              Are you completely sure you want to delete the registration for <strong>{deleteModal.name}</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setDeleteModal({ isOpen: false, id: '', name: '' })} className="btn-secondary" style={{ flex: 1, padding: '14px' }}>Cancel</button>
+              <button onClick={confirmDelete} className="btn-primary" style={{ flex: 1, background: 'var(--danger)', padding: '14px' }}>Delete Permanently</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT MODAL */}
+      {editModal.isOpen && editModal.data && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="glass animate-fade-in" style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ marginBottom: '24px', fontSize: '1.4rem', color: 'var(--primary)' }}>Edit Registration</h3>
+            <form onSubmit={saveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>Name</label>
+                <input type="text" className="input-field" value={editModal.data.name} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, name: e.target.value } })} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>Phone</label>
+                <input type="tel" className="input-field" value={editModal.data.phone} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, phone: e.target.value } })} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>WhatsApp</label>
+                <input type="tel" className="input-field" value={editModal.data.whatsapp} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, whatsapp: e.target.value } })} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>Age</label>
+                <input type="number" className="input-field" value={editModal.data.age} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, age: e.target.value } })} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>School</label>
+                <input type="text" className="input-field" value={editModal.data.school} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, school: e.target.value } })} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>Position</label>
+                <input type="text" className="input-field" value={editModal.data.position} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, position: e.target.value } })} required />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                <button type="button" onClick={() => setEditModal({ isOpen: false, data: null })} className="btn-secondary" style={{ flex: 1, padding: '14px' }}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px' }}>Save Changes</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
