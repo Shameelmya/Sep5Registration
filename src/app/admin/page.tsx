@@ -397,7 +397,7 @@ export default function AdminDashboard() {
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setDeleteModal({ isOpen: false, id: '', name: '' })} className="btn-secondary" style={{ flex: 1, padding: '14px' }}>Cancel</button>
-              <button onClick={confirmDelete} className="btn-primary" style={{ flex: 1, background: 'var(--danger)', padding: '14px' }}>Delete Permanently</button>
+              <button onClick={confirmDelete} className="btn-primary" style={{ flex: 1, background: 'var(--danger)', padding: '14px' }}>Confirm</button>
             </div>
           </div>
         </div>
