@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { schools } from '@/lib/schools';
 import { db } from '@/lib/firebase';
@@ -19,6 +19,22 @@ export default function Register() {
   const [sameAsPhone, setSameAsPhone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Custom dropdown state
+  const [schoolSearch, setSchoolSearch] = useState('');
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowSchoolDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,6 +53,12 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
+    if (!formData.school) {
+      setError('Please select a school from the list.');
+      setLoading(false);
+      return;
+    }
 
     try {
       const docRef = doc(db, 'registrations', formData.phone);
@@ -67,13 +89,15 @@ export default function Register() {
     setLoading(false);
   };
 
+  const filteredSchools = schools.filter(s => s.toLowerCase().includes(schoolSearch.toLowerCase()));
+
   return (
     <div className="container animate-fade-in" style={{ paddingTop: '40px', paddingBottom: '40px' }}>
       <button onClick={() => router.back()} style={{ background: 'transparent', color: 'var(--primary-alt)', fontWeight: '600', marginBottom: '24px', fontSize: '1rem', padding: '0', border: 'none', cursor: 'pointer' }}>
         &larr; Back
       </button>
       
-      <h1 style={{ marginBottom: '32px', textAlign: 'center' }}>Create An Account</h1>
+      <h1 style={{ marginBottom: '32px', textAlign: 'center' }}>Registration</h1>
 
       {error && (
         <div style={{ backgroundColor: '#fee2e2', color: 'var(--danger)', padding: '16px', borderRadius: '16px', marginBottom: '24px', fontWeight: '500', fontSize: '0.9rem', textAlign: 'center' }}>
@@ -85,7 +109,7 @@ export default function Register() {
         
         <div className="input-wrapper">
           <label className="input-label">Full name</label>
-          <input required type="text" name="name" value={formData.name} onChange={handleChange} className="input-field" placeholder="enter your name" />
+          <input required type="text" name="name" value={formData.name} onChange={handleChange} className="input-field" />
         </div>
         
         <div className="input-wrapper">
@@ -93,35 +117,86 @@ export default function Register() {
           <input required type="tel" name="phone" value={formData.phone} onChange={(e) => {
             handleChange(e);
             if(sameAsPhone) setFormData(prev => ({...prev, whatsapp: e.target.value}));
-          }} className="input-field" placeholder="enter mobile number" />
+          }} className="input-field" />
         </div>
 
         <div className="input-wrapper">
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginLeft: '12px', fontSize: '0.85rem', fontWeight: '500', color: 'var(--primary)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={sameAsPhone} onChange={handleCheckbox} style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }} />
-            WhatsApp number is same as phone
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', marginLeft: '12px', marginRight: '12px' }}>
+            <label className="input-label" style={{ margin: 0 }}>WhatsApp Number</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: '600', color: '#475569', cursor: 'pointer' }}>
+              <input type="checkbox" checked={sameAsPhone} onChange={handleCheckbox} style={{ width: '16px', height: '16px', accentColor: 'var(--primary-alt)' }} />
+              Same as phone
+            </label>
+          </div>
           {!sameAsPhone && (
-            <input required type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className="input-field" placeholder="enter WhatsApp number" />
+            <input required type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className="input-field" />
           )}
         </div>
 
         <div className="input-wrapper">
           <label className="input-label">Age</label>
-          <input required type="number" name="age" value={formData.age} onChange={handleChange} className="input-field" placeholder="enter your age" />
+          <input required type="number" name="age" min="10" value={formData.age} onChange={handleChange} className="input-field" />
         </div>
 
-        <div className="input-wrapper">
+        <div className="input-wrapper" ref={dropdownRef}>
           <label className="input-label">School Name</label>
-          <select required name="school" value={formData.school} onChange={handleChange} className="input-field" style={{ appearance: 'none' }}>
-            <option value="" disabled>select your school</option>
-            {schools.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <div style={{ position: 'relative' }}>
+            <input 
+              type="text" 
+              value={schoolSearch} 
+              onChange={e => {
+                setSchoolSearch(e.target.value);
+                setFormData(prev => ({ ...prev, school: e.target.value }));
+                setShowSchoolDropdown(true);
+              }}
+              onFocus={() => setShowSchoolDropdown(true)}
+              className="input-field" 
+              placeholder="select your school"
+              required
+            />
+            
+            {showSchoolDropdown && (
+              <ul style={{ 
+                position: 'absolute', 
+                top: 'calc(100% + 8px)', 
+                left: 0, 
+                right: 0, 
+                background: 'white', 
+                zIndex: 10, 
+                maxHeight: '220px', 
+                overflowY: 'auto', 
+                borderRadius: '16px', 
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                padding: '8px 0',
+                listStyle: 'none'
+              }}>
+                {filteredSchools.length > 0 ? (
+                  filteredSchools.map(s => (
+                    <li 
+                      key={s} 
+                      style={{ padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: '0.95rem', color: '#334155' }} 
+                      onClick={() => {
+                        setSchoolSearch(s);
+                        setFormData(prev => ({ ...prev, school: s }));
+                        setShowSchoolDropdown(false);
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      {s}
+                    </li>
+                  ))
+                ) : (
+                  <li style={{ padding: '12px 20px', color: '#94a3b8', fontSize: '0.95rem' }}>No schools found</li>
+                )}
+              </ul>
+            )}
+          </div>
         </div>
 
         <div className="input-wrapper">
           <label className="input-label">Position</label>
-          <select required name="position" value={formData.position} onChange={handleChange} className="input-field" style={{ appearance: 'none' }}>
+          <select required name="position" value={formData.position} onChange={handleChange} className="input-field" style={{ appearance: 'none', color: formData.position ? 'var(--foreground)' : '#94a3b8' }}>
             <option value="" disabled>select your position</option>
             <option value="Head of Institution">Head of Institution</option>
             <option value="ICT Coordinator">ICT Coordinator</option>
@@ -129,7 +204,7 @@ export default function Register() {
         </div>
 
         <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: '24px' }}>
-          {loading ? 'Submitting...' : 'Sign Up'}
+          {loading ? 'Submitting...' : 'Submit'}
         </button>
       </form>
     </div>
