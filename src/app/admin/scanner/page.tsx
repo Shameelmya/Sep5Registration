@@ -16,11 +16,11 @@ export default function Scanner() {
   useEffect(() => {
     let scanner: Html5QrcodeScanner | null = null;
     
-    // Slight delay to ensure DOM is ready
     const timer = setTimeout(() => {
       scanner = new Html5QrcodeScanner("reader", { 
         qrbox: { width: 250, height: 250 }, 
-        fps: 5 
+        fps: 10,
+        videoConstraints: { facingMode: "environment" } // Prefer back camera on mobile
       }, false);
 
       scanner.render(
