@@ -8,126 +8,148 @@ import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 
 export default function Ticket() {
-  const { id } = useParams();
+  const params = useParams();
+  const phone = params.id as string;
   const router = useRouter();
   const ticketRef = useRef<HTMLDivElement>(null);
-  
-  const [data, setData] = useState<any>(null);
+
+  const [registration, setRegistration] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchTicket = async () => {
       try {
-        const docSnap = await getDoc(doc(db, 'registrations', id as string));
+        const docRef = doc(db, 'registrations', phone);
+        const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
-          setData({ id: docSnap.id, ...docSnap.data() });
+          setRegistration(docSnap.data());
         } else {
-          console.log("No such ticket");
+          setError('Ticket not found.');
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        setError('Error fetching ticket.');
       }
       setLoading(false);
     };
-    if (id) fetchTicket();
-  }, [id]);
+    fetchTicket();
+  }, [phone]);
 
   const handleDownload = async () => {
     if (ticketRef.current) {
-      try {
-        const canvas = await html2canvas(ticketRef.current, { scale: 2 });
-        const image = canvas.toDataURL("image/png");
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = `Ticket_${data.regNumber}.png`;
-        link.click();
-      } catch (err) {
-        console.error("Failed to generate image", err);
-      }
+      const canvas = await html2canvas(ticketRef.current, { scale: 3, backgroundColor: null });
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = `Ticket_${registration.regNumber}.png`;
+      link.click();
     }
   };
 
   const handleShare = async () => {
-    if (ticketRef.current) {
-      try {
-        const canvas = await html2canvas(ticketRef.current, { scale: 2 });
-        canvas.toBlob(async (blob) => {
-          if (blob && navigator.share) {
-            const file = new File([blob], `Ticket_${data.regNumber}.png`, { type: 'image/png' });
+    if (ticketRef.current && navigator.share) {
+      const canvas = await html2canvas(ticketRef.current, { scale: 2, backgroundColor: null });
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const file = new File([blob], `Ticket_${registration.regNumber}.png`, { type: 'image/png' });
+          try {
             await navigator.share({
-              title: 'MLA Teachers Day Ticket',
+              title: 'My Registration Ticket',
+              text: 'Here is my ticket for the Teachers Day Programme!',
               files: [file]
             });
-          } else {
-            alert("Sharing not supported on this browser. Please use the download button.");
+          } catch (err) {
+            console.error('Share failed', err);
           }
-        });
-      } catch(err) {
-        console.error(err);
-      }
+        }
+      });
+    } else {
+      alert("Sharing is not supported on this device/browser. Please download instead.");
     }
   };
 
-  if (loading) return <div className="container" style={{paddingTop:'40px', textAlign:'center'}}>Loading ticket...</div>;
-  if (!data) return <div className="container" style={{paddingTop:'40px', textAlign:'center'}}>Ticket not found.</div>;
+  if (loading) return <div className="container" style={{ textAlign: 'center', paddingTop: '100px' }}>Loading ticket...</div>;
+  if (error) return <div className="container" style={{ textAlign: 'center', paddingTop: '100px', color: 'var(--danger)' }}>{error}</div>;
+  if (!registration) return null;
 
   return (
-    <div className="container animate-fade-in" style={{ paddingTop: '40px' }}>
-      <button onClick={() => router.push('/')} style={{ background: 'transparent', color: 'var(--primary)', fontWeight: '600', marginBottom: '24px', fontSize: '1rem', padding: '0', border: 'none', cursor: 'pointer' }}>
+    <div className="container animate-fade-in" style={{ paddingTop: '32px', paddingBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <button onClick={() => router.push('/')} style={{ background: 'transparent', color: 'var(--primary-alt)', fontWeight: '600', marginBottom: '24px', fontSize: '1rem', padding: '0', border: 'none', cursor: 'pointer', alignSelf: 'flex-start' }}>
         &larr; Home
       </button>
 
-      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <h2 style={{ color: 'var(--success)' }}>Registration Successful!</h2>
-        <p style={{ color: 'var(--secondary-text)', marginTop: '8px' }}>Your unique registration number is <strong>{data.regNumber}</strong></p>
-      </div>
+      <h2 style={{ color: 'var(--success)', marginBottom: '8px', textAlign: 'center', fontSize: '1.6rem' }}>Registration Successful!</h2>
+      <p style={{ color: 'var(--secondary-text)', textAlign: 'center', marginBottom: '24px', fontSize: '0.95rem' }}>
+        Registration number : <strong style={{ color: 'var(--foreground)' }}>{registration.regNumber}</strong>
+      </p>
 
-      <div 
-        ref={ticketRef}
-        style={{ 
-          background: 'var(--card-bg)', 
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderRadius: 'var(--radius-lg)', 
-          padding: '32px', 
-          border: '1px solid var(--border)',
-          boxShadow: 'var(--shadow-md)',
-          marginBottom: '24px',
-          position: 'relative',
+      {/* TICKET WRAPPER */}
+      <div style={{ filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.1))', width: '100%', maxWidth: '340px', marginBottom: '32px' }}>
+        <div ref={ticketRef} style={{ 
+          background: 'white', 
+          borderRadius: '20px',
           overflow: 'hidden',
-          // Ensure correct rendering in html2canvas by specifying text colors explicitly
-          color: 'var(--foreground)'
-        }}
-      >
-        {/* Logo Placeholder */}
-        <div style={{ width: '100%', height: '80px', backgroundColor: 'var(--secondary)', marginBottom: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '8px' }}>
-           <span style={{ color: 'var(--secondary-text)' }}>horizontal logo here</span>
-        </div>
+          /* Ticket cutout mask for modern professional look */
+          WebkitMaskImage: 'radial-gradient(circle at 0px 145px, transparent 16px, black 17px), radial-gradient(circle at 100% 145px, transparent 16px, black 17px)',
+          WebkitMaskSize: '51% 100%',
+          WebkitMaskPosition: 'left, right',
+          WebkitMaskRepeat: 'no-repeat',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          
+          {/* Top Colored Part */}
+          <div style={{ 
+            background: 'linear-gradient(135deg, var(--primary), var(--primary-alt))', 
+            color: 'white', 
+            padding: '24px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            height: '145px',
+            justifyContent: 'center',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '0.75rem', letterSpacing: '0.05em', opacity: 0.9, marginBottom: '8px', textTransform: 'uppercase', fontWeight: '600' }}>
+              Reg No: {registration.regNumber}
+            </div>
+            <div style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '4px', lineHeight: 1.1 }}>
+              {registration.name}
+            </div>
+            <div style={{ fontSize: '0.9rem', fontWeight: '500', opacity: 0.95, marginBottom: '2px' }}>
+              {registration.position}
+            </div>
+            <div style={{ fontSize: '0.8rem', opacity: 0.8, lineHeight: 1.2 }}>
+              {registration.school}
+            </div>
+          </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
-          <div style={{ padding: '16px', background: '#fff', borderRadius: '12px', marginBottom: '16px' }}>
-            <QRCodeSVG value={data.id} size={150} level={"H"} />
-          </div>
-          <div style={{ background: 'var(--primary)', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Delegate Tag
-          </div>
-        </div>
+          {/* Dashed Divider Line */}
+          <div style={{ width: '100%', height: '0', borderTop: '2px dashed rgba(0,0,0,0.15)', position: 'relative' }}></div>
 
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ marginBottom: '8px' }}>{data.name}</h2>
-          <p style={{ fontSize: '1.1rem', color: 'var(--primary)', fontWeight: '500', marginBottom: '4px' }}>{data.position}</p>
-          <p style={{ color: 'var(--secondary-text)', fontSize: '0.9rem', marginBottom: '16px' }}>{data.school}</p>
-          <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '16px' }}>
-            <p style={{ fontSize: '0.8rem', color: 'var(--secondary-text)' }}>REG NO: <strong style={{ color: 'var(--foreground)' }}>{data.regNumber}</strong></p>
+          {/* Bottom White Part */}
+          <div style={{ 
+            background: 'white', 
+            padding: '20px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center' 
+          }}>
+            <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '16px' }}>horizontal logo here</div>
+            <QRCodeSVG value={registration.regNumber} size={140} level="M" />
+            <div style={{ fontSize: '0.7rem', color: '#cbd5e1', marginTop: '12px' }}>Scan for entry</div>
           </div>
+
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px' }}>
-        <button onClick={handleDownload} className="btn-primary" style={{ flex: 1 }}>
-          Download PNG
+      <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '340px' }}>
+        <button onClick={handleDownload} className="btn-primary" style={{ flex: 1, padding: '16px 0' }}>
+          Download
         </button>
-        <button onClick={handleShare} className="btn-secondary" style={{ flex: 1 }}>
+        <button onClick={handleShare} className="btn-secondary" style={{ flex: 1, padding: '16px 0' }}>
           Share
         </button>
       </div>
