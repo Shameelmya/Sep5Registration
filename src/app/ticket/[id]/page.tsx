@@ -39,7 +39,8 @@ export default function Ticket() {
 
   const handleDownload = async () => {
     if (ticketRef.current) {
-      const canvas = await html2canvas(ticketRef.current, { scale: 3, backgroundColor: null });
+      // Use scale 4 for high quality and solid background to prevent WhatsApp from making transparent corners black
+      const canvas = await html2canvas(ticketRef.current, { scale: 4, backgroundColor: '#f0fdf4' });
       const image = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = image;
@@ -50,7 +51,7 @@ export default function Ticket() {
 
   const handleShare = async () => {
     if (ticketRef.current && navigator.share) {
-      const canvas = await html2canvas(ticketRef.current, { scale: 2, backgroundColor: null });
+      const canvas = await html2canvas(ticketRef.current, { scale: 4, backgroundColor: '#f0fdf4' });
       canvas.toBlob(async (blob) => {
         if (blob) {
           const file = new File([blob], `Ticket_${registration.regNumber}.png`, { type: 'image/png' });
