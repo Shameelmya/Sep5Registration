@@ -151,7 +151,7 @@ export default function Register() {
               }}
               onFocus={() => setShowSchoolDropdown(true)}
               className="input-field" 
-              placeholder="select your school"
+              placeholder="Search Your School"
               required
             />
             
@@ -197,7 +197,7 @@ export default function Register() {
         <div className="input-wrapper">
           <label className="input-label">Position</label>
           <select required name="position" value={formData.position} onChange={handleChange} className="input-field" style={{ appearance: 'none', color: formData.position ? 'var(--foreground)' : '#94a3b8' }}>
-            <option value="" disabled>select your position</option>
+            <option value="" disabled>Select Your Position</option>
             <option value="Head of Institution">Head of Institution</option>
             <option value="ICT Coordinator">ICT Coordinator</option>
           </select>
