@@ -62,9 +62,9 @@ export default function Home() {
           {timeLeft ? (
             <>
               <TimeBox value={timeLeft.d} label="Days" color="linear-gradient(135deg, var(--primary), var(--primary-alt))" />
-              <TimeBox value={timeLeft.h} label="Hrs" color="var(--accent)" />
+              <TimeBox value={timeLeft.h} label="Hrs" color="linear-gradient(135deg, #059669, #34d399)" />
               <TimeBox value={timeLeft.m} label="Min" color="linear-gradient(135deg, var(--primary), var(--primary-alt))" />
-              <TimeBox value={timeLeft.s} label="Sec" color="var(--accent)" />
+              <TimeBox value={timeLeft.s} label="Sec" color="linear-gradient(135deg, #059669, #34d399)" />
             </>
           ) : (
             <div style={{ height: '80px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading timer...</div>
