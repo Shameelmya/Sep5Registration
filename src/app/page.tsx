@@ -49,8 +49,6 @@ export default function Home() {
 
   return (
     <div className="container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '40px', paddingBottom: '40px' }}>
-      
-      <h1 style={{ marginBottom: '24px', textAlign: 'center', color: '#0f172a' }}>Teachers Day<br/>Programme</h1>
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
