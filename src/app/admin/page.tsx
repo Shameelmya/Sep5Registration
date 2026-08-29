@@ -215,8 +215,17 @@ export default function AdminDashboard() {
         <div style={{ fontSize: '0.8rem', color: 'var(--secondary-text)', marginBottom: '12px' }}>Registration Status</div>
         <button 
           onClick={toggleRegistration} 
-          className={isRegOpen ? "btn-secondary" : "btn-primary"}
-          style={{ width: '100%', background: !isRegOpen ? 'var(--danger)' : undefined, color: !isRegOpen ? 'white' : undefined }}
+          style={{ 
+            width: '100%', 
+            padding: '16px',
+            borderRadius: '12px',
+            fontSize: '1rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            border: 'none',
+            background: isRegOpen ? 'var(--success)' : 'var(--danger)', 
+            color: 'white' 
+          }}
         >
           {isRegOpen ? 'Close Registration' : 'Open Registration'}
         </button>
