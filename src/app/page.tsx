@@ -12,21 +12,26 @@ export default function Home() {
     // SEP 5 2026, 8.55 AM target date
     const targetDate = new Date("2026-09-05T08:55:00").getTime();
     
-    const interval = setInterval(() => {
+    const calculateTime = () => {
       const now = new Date().getTime();
       const distance = targetDate - now;
 
       if (distance < 0) {
-        clearInterval(interval);
-        setTimeLeft({ d: 0, h: 0, m: 0, s: 0 });
-      } else {
-        setTimeLeft({
-          d: Math.floor(distance / (1000 * 60 * 60 * 24)),
-          h: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          m: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-          s: Math.floor((distance % (1000 * 60)) / 1000)
-        });
+        return { d: 0, h: 0, m: 0, s: 0 };
       }
+      return {
+        d: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        h: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        m: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        s: Math.floor((distance % (1000 * 60)) / 1000)
+      };
+    };
+
+    // Calculate immediately to avoid the 1 second loading delay
+    setTimeLeft(calculateTime());
+    
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTime());
     }, 1000);
 
     return () => clearInterval(interval);
@@ -49,17 +54,17 @@ export default function Home() {
 
   return (
     <div className="container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '40px', paddingBottom: '40px' }}>
-
+      
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
         {/* Countdown Timer */}
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
           {timeLeft ? (
             <>
-              <TimeBox value={timeLeft.d} label="Days" />
-              <TimeBox value={timeLeft.h} label="Hrs" />
-              <TimeBox value={timeLeft.m} label="Min" />
-              <TimeBox value={timeLeft.s} label="Sec" />
+              <TimeBox value={timeLeft.d} label="Days" color="var(--primary)" />
+              <TimeBox value={timeLeft.h} label="Hrs" color="var(--accent)" />
+              <TimeBox value={timeLeft.m} label="Min" color="var(--primary)" />
+              <TimeBox value={timeLeft.s} label="Sec" color="var(--accent)" />
             </>
           ) : (
             <div style={{ height: '80px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading timer...</div>
@@ -97,11 +102,11 @@ export default function Home() {
   );
 }
 
-function TimeBox({ value, label }: { value: number, label: string }) {
+function TimeBox({ value, label, color }: { value: number, label: string, color: string }) {
   return (
-    <div style={{ flex: 1, background: '#ffffff', borderRadius: '16px', padding: '14px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
-      <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#0f172a', marginBottom: '2px' }}>{value.toString().padStart(2, '0')}</div>
-      <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>{label}</div>
+    <div style={{ flex: 1, background: color, borderRadius: '16px', padding: '14px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+      <div style={{ fontSize: '1.4rem', fontWeight: '700', color: '#ffffff', marginBottom: '2px' }}>{value.toString().padStart(2, '0')}</div>
+      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.95)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>{label}</div>
     </div>
   );
 }
