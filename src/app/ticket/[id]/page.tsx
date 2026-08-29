@@ -138,7 +138,7 @@ export default function Ticket() {
             flexDirection: 'column', 
             alignItems: 'center' 
           }}>
-            <QRCodeSVG value={registration.regNumber} size={140} level="M" />
+            <QRCodeSVG value={registration.regNumber} size={160} level="M" />
             <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '12px', marginBottom: '24px' }}>Scan for entry</div>
 
             <div style={{ width: '95%', height: '70px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
