@@ -133,16 +133,17 @@ export default function Ticket() {
           {/* Bottom White Part */}
           <div style={{ 
             background: 'white', 
-            padding: '28px 20px 24px 20px', 
+            padding: '28px 20px', 
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center' 
           }}>
-            <div style={{ width: '80%', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
-              <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>horizontal logo here</span>
-            </div>
             <QRCodeSVG value={registration.regNumber} size={140} level="M" />
-            <div style={{ fontSize: '0.7rem', color: '#cbd5e1', marginTop: '12px' }}>Scan for entry</div>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '12px', marginBottom: '24px' }}>Scan for entry</div>
+
+            <div style={{ width: '95%', height: '70px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
+              <span style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: '500' }}>horizontal logo here</span>
+            </div>
           </div>
 
         </div>
