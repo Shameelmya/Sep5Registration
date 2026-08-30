@@ -26,7 +26,7 @@ export default function Ticket() {
         if (docSnap.exists()) {
           setRegistration(docSnap.data());
         } else {
-          setError('Ticket not found.');
+          setError('Entry pass not found.');
         }
       } catch (err: any) {
         console.error(err);
@@ -54,7 +54,7 @@ export default function Ticket() {
       const image = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = image;
-      link.download = `Ticket_${registration.regNumber}.png`;
+      link.download = `EntryPass_${registration.regNumber}.png`;
       link.click();
     }
   };
@@ -74,11 +74,11 @@ export default function Ticket() {
       });
       canvas.toBlob(async (blob) => {
         if (blob) {
-          const file = new File([blob], `Ticket_${registration.regNumber}.png`, { type: 'image/png' });
+          const file = new File([blob], `EntryPass_${registration.regNumber}.png`, { type: 'image/png' });
           try {
             await navigator.share({
               title: 'Registration Successful',
-              text: `Registration Successful!\nName: ${registration.name}\nReg No: ${registration.regNumber}\n\nHere is your ticket for the Teachers Day Programme!`,
+              text: `Registration Successful!\nName: ${registration.name}\nReg No: ${registration.regNumber}\n\nHere is your entry pass for the Teachers Day Programme!`,
               files: [file]
             });
           } catch (err) {
@@ -91,7 +91,7 @@ export default function Ticket() {
     }
   };
 
-  if (loading) return <div className="container" style={{ textAlign: 'center', paddingTop: '100px' }}>Loading ticket...</div>;
+  if (loading) return <div className="container" style={{ textAlign: 'center', paddingTop: '100px' }}>Loading entry pass...</div>;
   if (error) return <div className="container" style={{ textAlign: 'center', paddingTop: '100px', color: 'var(--danger)' }}>{error}</div>;
   if (!registration) return null;
 

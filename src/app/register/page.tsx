@@ -12,10 +12,10 @@ export default function Register() {
     name: '',
     phone: '',
     whatsapp: '',
-    age: '',
     school: '',
     position: ''
   });
+  const [showOtherDesignation, setShowOtherDesignation] = useState(false);
   const [sameAsPhone, setSameAsPhone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -133,10 +133,7 @@ export default function Register() {
           )}
         </div>
 
-        <div className="input-wrapper">
-          <label className="input-label">Age</label>
-          <input required type="number" name="age" min="10" value={formData.age} onChange={handleChange} className="input-field" />
-        </div>
+
 
         <div className="input-wrapper" ref={dropdownRef}>
           <label className="input-label">School Name</label>
@@ -195,13 +192,29 @@ export default function Register() {
         </div>
 
         <div className="input-wrapper">
-          <label className="input-label">Position</label>
-          <select required name="position" value={formData.position} onChange={handleChange} className="input-field" style={{ appearance: 'none', color: formData.position ? 'var(--foreground)' : '#94a3b8' }}>
-            <option value="" disabled>Select Your Position</option>
-            <option value="Head of Institution">Head of Institution</option>
+          <label className="input-label">Designation</label>
+          <select required name="position" value={showOtherDesignation ? 'Other' : formData.position} onChange={(e) => {
+             if (e.target.value === 'Other') {
+               setShowOtherDesignation(true);
+               setFormData({ ...formData, position: '' });
+             } else {
+               setShowOtherDesignation(false);
+               handleChange(e);
+             }
+          }} className="input-field" style={{ appearance: 'none', color: formData.position || showOtherDesignation ? 'var(--foreground)' : '#94a3b8' }}>
+            <option value="" disabled>Select Your Designation</option>
+            <option value="Principal/Head Teacher">Principal/Head Teacher</option>
             <option value="ICT Coordinator">ICT Coordinator</option>
+            <option value="Other">Other</option>
           </select>
         </div>
+
+        {showOtherDesignation && (
+          <div className="input-wrapper">
+            <label className="input-label">Enter Designation</label>
+            <input required type="text" name="position" value={formData.position} onChange={handleChange} className="input-field" placeholder="E.g. Vice Principal" />
+          </div>
+        )}
 
         <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: '24px' }}>
           {loading ? 'Submitting...' : 'Submit'}

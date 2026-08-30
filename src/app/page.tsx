@@ -87,12 +87,11 @@ export default function Home() {
           </button>
         )}
 
-        {/* Get Pass & Location Half/Half */}
         <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
           <Link href="/get-pass" className="btn-secondary" style={{ flex: 1, padding: '16px 0' }}>
             Get Pass
           </Link>
-          <a href="https://maps.google.com/?q=MLA+Office" target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ flex: 1, padding: '16px 0' }}>
+          <a href="https://maps.app.goo.gl/aa2GviWm4EKhDqxy7" target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ flex: 1, padding: '16px 0' }}>
             Location
           </a>
         </div>

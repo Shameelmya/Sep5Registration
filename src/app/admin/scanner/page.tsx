@@ -155,7 +155,7 @@ export default function Scanner() {
         </button>
       )}
 
-      {loading && <p style={{ textAlign: 'center', marginTop: '24px' }}>Verifying Ticket...</p>}
+      {loading && <p style={{ textAlign: 'center', marginTop: '24px' }}>Verifying Entry Pass...</p>}
 
       {error && (
         <div className="animate-fade-in" style={{ backgroundColor: 'rgba(255,59,48,0.1)', color: 'var(--danger)', padding: '16px', borderRadius: 'var(--radius-md)', marginTop: '24px', fontWeight: '500', textAlign: 'center' }}>
@@ -174,7 +174,7 @@ export default function Scanner() {
             <p><strong>Name:</strong> {userData.name}</p>
             <p><strong>Phone:</strong> {userData.phone}</p>
             <p><strong>School:</strong> {userData.school}</p>
-            <p><strong>Position:</strong> {userData.position}</p>
+            <p><strong>Designation:</strong> {userData.position}</p>
             <p><strong>Reg No:</strong> {userData.regNumber}</p>
             <p style={{ marginTop: '8px' }}>
               <strong>Status:</strong> 
@@ -203,7 +203,7 @@ export default function Scanner() {
               </button>
             )}
             <button onClick={startScanner} className="btn-primary" style={{ padding: '16px', fontSize: '1.1rem' }}>
-              Scan Next Ticket
+              Scan Next Entry Pass
             </button>
           </div>
         </div>

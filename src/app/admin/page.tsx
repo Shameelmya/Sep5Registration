@@ -100,9 +100,8 @@ export default function AdminDashboard() {
       "Name": r.name,
       "Phone Number": r.phone,
       "WhatsApp": r.whatsapp || r.phone,
-      "Age": r.age,
       "School": r.school,
-      "Position": r.position,
+      "Designation": r.position,
       "Status": r.status || "Pending",
       "Registration Date": r.timestamp ? new Date(r.timestamp).toLocaleString() : ""
     }));
@@ -304,9 +303,9 @@ export default function AdminDashboard() {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--secondary-text)', marginBottom: '8px' }}>Filter by Position</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--secondary-text)', marginBottom: '8px' }}>Filter by Designation</label>
             <select className="input-field" value={filterPosition} onChange={e => setFilterPosition(e.target.value)} style={{ padding: '12px' }}>
-              <option value="">All Positions</option>
+              <option value="">All Designations</option>
               {uniquePositions.map((p: any) => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
@@ -461,15 +460,11 @@ export default function AdminDashboard() {
                 <input type="tel" className="input-field" value={editModal.data.whatsapp} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, whatsapp: e.target.value } })} required />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>Age</label>
-                <input type="number" className="input-field" value={editModal.data.age} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, age: e.target.value } })} required />
-              </div>
-              <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>School</label>
                 <input type="text" className="input-field" value={editModal.data.school} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, school: e.target.value } })} required />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>Position</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>Designation</label>
                 <input type="text" className="input-field" value={editModal.data.position} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, position: e.target.value } })} required />
               </div>
               
