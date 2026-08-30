@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { schools } from '@/lib/schools';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 
 export default function Register() {
   const router = useRouter();
@@ -70,7 +70,16 @@ export default function Register() {
         return;
       }
 
-      const regNumber = "MLA-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+      const counterRef = doc(db, 'config', 'counter');
+      const regNumber = await runTransaction(db, async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+        let newCount = 1;
+        if (counterDoc.exists()) {
+          newCount = (counterDoc.data().value || 0) + 1;
+        }
+        transaction.set(counterRef, { value: newCount }, { merge: true });
+        return "MPT" + String(newCount).padStart(3, '0');
+      });
 
       await setDoc(docRef, {
         ...formData,
