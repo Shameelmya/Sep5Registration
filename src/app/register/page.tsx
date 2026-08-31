@@ -4,7 +4,21 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { schools } from '@/lib/schools';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, runTransaction, collection, getDocs } from 'firebase/firestore';
+
+function normalizePhone(phone: string) {
+  let digits = phone.replace(/[^0-9]/g, '');
+  if (digits.length > 10) {
+    if (digits.startsWith('91') && digits.length === 12) {
+      digits = digits.substring(2);
+    } else if (digits.startsWith('091') && digits.length === 13) {
+      digits = digits.substring(3);
+    } else if (digits.startsWith('0') && digits.length === 11) {
+      digits = digits.substring(1);
+    }
+  }
+  return digits;
+}
 
 export default function Register() {
   const router = useRouter();
@@ -61,14 +75,30 @@ export default function Register() {
     }
 
     try {
-      const docRef = doc(db, 'registrations', formData.phone);
-      const docSnap = await getDoc(docRef);
+      const normPhone = normalizePhone(formData.phone);
+      if (normPhone.length < 10) {
+        setError('Please enter a valid 10-digit phone number.');
+        setLoading(false);
+        return;
+      }
 
-      if (docSnap.exists()) {
+      // Check all documents for duplicates using the normalized number to handle messy old data
+      const qSnap = await getDocs(collection(db, 'registrations'));
+      let isDuplicate = false;
+      qSnap.forEach(docSnap => {
+        if (normalizePhone(docSnap.id) === normPhone || normalizePhone(docSnap.data().phone || '') === normPhone) {
+          isDuplicate = true;
+        }
+      });
+
+      if (isDuplicate) {
         setError('Phone number is already registered.');
         setLoading(false);
         return;
       }
+
+      // Use the clean normalized phone as the document ID
+      const docRef = doc(db, 'registrations', normPhone);
 
       const counterRef = doc(db, 'config', 'counter');
       const regNumber = await runTransaction(db, async (transaction) => {
@@ -83,13 +113,14 @@ export default function Register() {
 
       await setDoc(docRef, {
         ...formData,
-        whatsapp: sameAsPhone ? formData.phone : formData.whatsapp,
+        phone: normPhone,
+        whatsapp: sameAsPhone ? normPhone : normalizePhone(formData.whatsapp),
         regNumber,
         status: 'Pending',
         createdAt: serverTimestamp()
       });
 
-      router.push(`/ticket/${formData.phone}`);
+      router.push(`/ticket/${normPhone}`);
 
     } catch (err: any) {
       console.error(err);

@@ -361,7 +361,11 @@ export default function AdminDashboard() {
                     {r.name}<br/>
                     <span style={{ fontSize: '0.8rem', color: 'var(--secondary-text)' }}>{r.position}</span>
                   </td>
-                  <td style={{ padding: '16px' }}>{r.phone}</td>
+                  <td style={{ padding: '16px' }}>
+                    <a href={`tel:${r.phone}`} style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: '500' }}>
+                      {r.phone}
+                    </a>
+                  </td>
                   <td style={{ padding: '16px', fontSize: '0.9rem' }}>{r.school}</td>
                   <td style={{ padding: '16px', textAlign: 'center' }}>
                     <span style={{ 
