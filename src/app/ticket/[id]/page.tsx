@@ -7,6 +7,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 
+function toTitleCase(str: string) {
+  if (!str) return '';
+  return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
 export default function Ticket() {
   const params = useParams();
   const phone = params.id as string;
@@ -137,7 +142,7 @@ export default function Ticket() {
               Reg No: {registration.regNumber}
             </div>
             <div style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '4px', lineHeight: 1.1 }}>
-              {registration.name}
+              {toTitleCase(registration.name)}
             </div>
             <div style={{ fontSize: '0.9rem', fontWeight: '500', opacity: 0.95, marginBottom: '2px' }}>
               {registration.position}

@@ -20,6 +20,11 @@ function normalizePhone(phone: string) {
   return digits;
 }
 
+function toTitleCase(str: string) {
+  if (!str) return '';
+  return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
 export default function Register() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -68,8 +73,8 @@ export default function Register() {
     setLoading(true);
     setError('');
     
-    if (!formData.school) {
-      setError('Please select a school from the list.');
+    if (!formData.school || !schools.includes(formData.school)) {
+      setError('Please select a valid school from the list.');
       setLoading(false);
       return;
     }
@@ -111,8 +116,11 @@ export default function Register() {
         return "MPT" + String(newCount).padStart(3, '0');
       });
 
+      const titleCaseName = toTitleCase(formData.name);
+
       await setDoc(docRef, {
         ...formData,
+        name: titleCaseName,
         phone: normPhone,
         whatsapp: sameAsPhone ? normPhone : normalizePhone(formData.whatsapp),
         regNumber,
