@@ -25,6 +25,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   const [showFilter, setShowFilter] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+  const [sortBy, setSortBy] = useState('timeDesc');
   const [filterSchool, setFilterSchool] = useState('');
   const [filterPosition, setFilterPosition] = useState('');
   const [filterAttendance, setFilterAttendance] = useState('');
@@ -80,7 +82,7 @@ export default function AdminDashboard() {
       querySnapshot.forEach((doc) => {
         data.push({ id: doc.id, ...doc.data() });
       });
-      data.sort((a, b) => b.timestamp - a.timestamp);
+      // Removed static sort, sorting is handled dynamically during render
       setRegistrations(data);
     } catch (err) {
       console.error(err);
@@ -222,6 +224,22 @@ export default function AdminDashboard() {
     return true;
   });
 
+  const getTime = (r: any) => {
+    if (r.createdAt && r.createdAt.seconds) return r.createdAt.seconds;
+    if (r.timestamp) return r.timestamp / 1000;
+    return 0;
+  };
+
+  const sortedAndFiltered = [...filteredRegistrations].sort((a, b) => {
+    if (sortBy === 'timeDesc') return getTime(b) - getTime(a);
+    if (sortBy === 'timeAsc') return getTime(a) - getTime(b);
+    if (sortBy === 'nameAsc') return (a.name || '').localeCompare(b.name || '');
+    if (sortBy === 'nameDesc') return (b.name || '').localeCompare(a.name || '');
+    if (sortBy === 'schoolAsc') return (a.school || '').localeCompare(b.school || '');
+    if (sortBy === 'schoolDesc') return (b.school || '').localeCompare(a.school || '');
+    return 0;
+  });
+
   return (
     <div className="admin-container animate-fade-in" style={{ paddingTop: '40px', paddingBottom: '80px', position: 'relative' }}>
       
@@ -278,7 +296,7 @@ export default function AdminDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Registrations</h2>
           <button 
-            onClick={() => setShowFilter(!showFilter)}
+            onClick={() => { setShowSort(false); setShowFilter(!showFilter); }}
             style={{ 
               display: 'flex', alignItems: 'center', justifyContent: 'center', 
               width: '36px', height: '36px', borderRadius: '50%', 
@@ -290,6 +308,20 @@ export default function AdminDashboard() {
             title="Filter Options"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          </button>
+          <button 
+            onClick={() => { setShowFilter(false); setShowSort(!showSort); }}
+            style={{ 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              width: '36px', height: '36px', borderRadius: '50%', 
+              background: showSort ? 'var(--primary)' : 'white', 
+              color: showSort ? 'white' : 'var(--primary)', 
+              border: '1px solid #e2e8f0', cursor: 'pointer',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+            }}
+            title="Sort Options"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
           </button>
         </div>
         <button onClick={exportToExcel} style={{ background: 'white', color: 'var(--primary)', border: '1px solid var(--primary)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}>
@@ -330,6 +362,23 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* SORT PANEL */}
+      {showSort && (
+        <div className="glass" style={{ padding: '20px', borderRadius: 'var(--radius-md)', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--secondary-text)', marginBottom: '8px' }}>Sort By</label>
+            <select className="input-field" value={sortBy} onChange={e => { setSortBy(e.target.value); setShowSort(false); }} style={{ padding: '12px' }}>
+              <option value="timeDesc">Latest First (Time)</option>
+              <option value="timeAsc">Oldest First (Time)</option>
+              <option value="nameAsc">Name (A-Z)</option>
+              <option value="nameDesc">Name (Z-A)</option>
+              <option value="schoolAsc">School (A-Z)</option>
+              <option value="schoolDesc">School (Z-A)</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* SEARCH BAR (NO PLACEHOLDER TEXT) */}
       <div style={{ marginBottom: '24px' }}>
         <input 
@@ -359,8 +408,8 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {filteredRegistrations.map((r, i) => (
-                <tr key={r.id} style={{ borderBottom: i === filteredRegistrations.length - 1 ? 'none' : '1px solid rgba(0,0,0,0.05)' }}>
+              {sortedAndFiltered.map((r, i) => (
+                <tr key={r.id} style={{ borderBottom: i === sortedAndFiltered.length - 1 ? 'none' : '1px solid rgba(0,0,0,0.05)' }}>
                   <td style={{ padding: '16px', fontWeight: '600' }}>{r.regNumber}</td>
                   <td style={{ padding: '16px' }}>
                     {toTitleCase(r.name)}<br/>
@@ -426,7 +475,7 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
-          {filteredRegistrations.length === 0 && (
+          {sortedAndFiltered.length === 0 && (
             <div style={{ padding: '32px', textAlign: 'center', color: 'var(--secondary-text)' }}>No registrations found.</div>
           )}
         </div>
