@@ -453,11 +453,11 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>Phone</label>
-                <input type="tel" className="input-field" value={editModal.data.phone} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, phone: e.target.value } })} required />
+                <input type="tel" className="input-field" value={editModal.data.phone} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, phone: e.target.value.replace(/[^0-9]/g, '') } })} required pattern="[0-9]*" inputMode="numeric" />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>WhatsApp</label>
-                <input type="tel" className="input-field" value={editModal.data.whatsapp} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, whatsapp: e.target.value } })} required />
+                <input type="tel" className="input-field" value={editModal.data.whatsapp} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, whatsapp: e.target.value.replace(/[^0-9]/g, '') } })} required pattern="[0-9]*" inputMode="numeric" />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '6px', fontWeight: '500' }}>School</label>

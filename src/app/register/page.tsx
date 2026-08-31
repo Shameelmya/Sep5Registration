@@ -124,9 +124,10 @@ export default function Register() {
         <div className="input-wrapper">
           <label className="input-label">Phone Number</label>
           <input required type="tel" name="phone" value={formData.phone} onChange={(e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
             handleChange(e);
             if(sameAsPhone) setFormData(prev => ({...prev, whatsapp: e.target.value}));
-          }} className="input-field" />
+          }} className="input-field" pattern="[0-9]*" inputMode="numeric" />
         </div>
 
         <div className="input-wrapper">
@@ -138,7 +139,10 @@ export default function Register() {
             </label>
           </div>
           {!sameAsPhone && (
-            <input required type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} className="input-field" />
+            <input required type="tel" name="whatsapp" value={formData.whatsapp} onChange={(e) => {
+              e.target.value = e.target.value.replace(/[^0-9]/g, '');
+              handleChange(e);
+            }} className="input-field" pattern="[0-9]*" inputMode="numeric" />
           )}
         </div>
 
