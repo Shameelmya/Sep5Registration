@@ -71,9 +71,9 @@ export default function Home() {
           )}
         </div>
 
-        {/* Poster Placeholder - Empty block with alt text as requested */}
-        <div style={{ width: '100%', aspectRatio: '1080/1350', background: 'rgba(255,255,255,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 'var(--radius-lg)' }}>
-          <span style={{ color: 'var(--secondary-text)', fontSize: '1rem', fontWeight: '500' }}>poster here</span>
+        {/* Poster */}
+        <div style={{ width: '100%', aspectRatio: '1080/1350', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
+          <img src="/poster.jpg" alt="Event Poster" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
 
         {/* Register Button */}
