@@ -7,6 +7,11 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from '
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import * as XLSX from 'xlsx';
 
+function toTitleCase(str: string) {
+  if (!str) return '';
+  return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
@@ -97,7 +102,7 @@ export default function AdminDashboard() {
     // Map to strictly ordered objects with clean header names
     const formattedData = registrations.map(r => ({
       "Reg Number": r.regNumber,
-      "Name": r.name,
+      "Name": toTitleCase(r.name),
       "Phone Number": r.phone,
       "WhatsApp": r.whatsapp || r.phone,
       "School": r.school,
@@ -358,7 +363,7 @@ export default function AdminDashboard() {
                 <tr key={r.id} style={{ borderBottom: i === filteredRegistrations.length - 1 ? 'none' : '1px solid rgba(0,0,0,0.05)' }}>
                   <td style={{ padding: '16px', fontWeight: '600' }}>{r.regNumber}</td>
                   <td style={{ padding: '16px' }}>
-                    {r.name}<br/>
+                    {toTitleCase(r.name)}<br/>
                     <span style={{ fontSize: '0.8rem', color: 'var(--secondary-text)' }}>{r.position}</span>
                   </td>
                   <td style={{ padding: '16px' }}>
