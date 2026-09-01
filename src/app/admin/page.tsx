@@ -6,6 +6,7 @@ import { db, auth } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import * as XLSX from 'xlsx';
+import { schools } from '@/lib/schools';
 
 function toTitleCase(str: string) {
   if (!str) return '';
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
 
   const [showFilter, setShowFilter] = useState(false);
   const [showSort, setShowSort] = useState(false);
+  const [showCaution, setShowCaution] = useState(false);
   const [sortBy, setSortBy] = useState('timeDesc');
   const [filterSchool, setFilterSchool] = useState('');
   const [filterPosition, setFilterPosition] = useState('');
@@ -205,6 +207,7 @@ export default function AdminDashboard() {
 
   const uniqueSchools = Array.from(new Set(registrations.map(r => r.school))).filter(Boolean);
   const uniquePositions = Array.from(new Set(registrations.map(r => r.position))).filter(Boolean);
+  const unregisteredSchools = schools.filter(s => !uniqueSchools.includes(s));
 
   const filteredRegistrations = registrations.filter(r => {
     if (filterSchool && r.school !== filterSchool) return false;
@@ -296,7 +299,7 @@ export default function AdminDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Registrations</h2>
           <button 
-            onClick={() => { setShowSort(false); setShowFilter(!showFilter); }}
+            onClick={() => { setShowCaution(false); setShowSort(false); setShowFilter(!showFilter); }}
             style={{ 
               display: 'flex', alignItems: 'center', justifyContent: 'center', 
               width: '36px', height: '36px', borderRadius: '50%', 
@@ -310,7 +313,7 @@ export default function AdminDashboard() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
           </button>
           <button 
-            onClick={() => { setShowFilter(false); setShowSort(!showSort); }}
+            onClick={() => { setShowCaution(false); setShowFilter(false); setShowSort(!showSort); }}
             style={{ 
               display: 'flex', alignItems: 'center', justifyContent: 'center', 
               width: '36px', height: '36px', borderRadius: '50%', 
@@ -322,6 +325,20 @@ export default function AdminDashboard() {
             title="Sort Options"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+          </button>
+          <button 
+            onClick={() => { setShowFilter(false); setShowSort(false); setShowCaution(!showCaution); }}
+            style={{ 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              width: '36px', height: '36px', borderRadius: '50%', 
+              background: showCaution ? 'var(--danger)' : 'white', 
+              color: showCaution ? 'white' : 'var(--danger)', 
+              border: '1px solid #e2e8f0', cursor: 'pointer',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+            }}
+            title="Caution (Unregistered Schools)"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </button>
         </div>
         <button onClick={exportToExcel} style={{ background: 'white', color: 'var(--primary)', border: '1px solid var(--primary)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}>
@@ -375,6 +392,32 @@ export default function AdminDashboard() {
               <option value="schoolAsc">School (A-Z)</option>
               <option value="schoolDesc">School (Z-A)</option>
             </select>
+          </div>
+        </div>
+      )}
+
+      {/* CAUTION PANEL */}
+      {showCaution && (
+        <div className="glass animate-fade-in" style={{ padding: '20px', borderRadius: 'var(--radius-md)', marginBottom: '16px', border: '1px solid rgba(255, 59, 48, 0.3)' }}>
+          <h3 style={{ color: 'var(--danger)', marginBottom: '12px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Unregistered Schools ({unregisteredSchools.length})
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--secondary-text)', marginBottom: '16px' }}>
+            The following schools have zero registrations so far.
+          </p>
+          <div style={{ maxHeight: '300px', overflowY: 'auto', background: 'white', borderRadius: '8px', padding: '12px', border: '1px solid #e2e8f0' }}>
+            {unregisteredSchools.length > 0 ? (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {unregisteredSchools.map(s => (
+                  <li key={s} style={{ fontSize: '0.9rem', color: '#334155', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>{s}</li>
+                ))}
+              </ul>
+            ) : (
+              <div style={{ fontSize: '0.9rem', color: 'var(--success)', textAlign: 'center', padding: '12px' }}>
+                All schools have at least one registration!
+              </div>
+            )}
           </div>
         </div>
       )}
