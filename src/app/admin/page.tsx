@@ -7,6 +7,8 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from '
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import * as XLSX from 'xlsx';
 import { schools } from '@/lib/schools';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 function toTitleCase(str: string) {
   if (!str) return '';
@@ -255,6 +257,56 @@ export default function AdminDashboard() {
     return 0;
   });
 
+  const exportSchoolStatsToPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text("School Registration Statistics", 14, 22);
+    
+    doc.setFontSize(12);
+    doc.text(`Total Registrations: ${registrations.length}`, 14, 32);
+    doc.text(`Total Attended: ${attendedCount}`, 14, 40);
+
+    // Registered Schools Table
+    doc.setFontSize(14);
+    doc.text(`Registered Schools (${registeredSchoolsWithCounts.length})`, 14, 52);
+    
+    const registeredData = registeredSchoolsWithCounts.map((s, index) => [
+      index + 1,
+      s.school,
+      s.count
+    ]);
+
+    autoTable(doc, {
+      startY: 56,
+      head: [['#', 'School Name', 'Registrations']],
+      body: registeredData,
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] }
+    });
+
+    let finalY = (doc as any).lastAutoTable.finalY || 56;
+    
+    // Unregistered Schools Table
+    doc.setFontSize(14);
+    doc.text(`Unregistered Schools (${unregisteredSchools.length})`, 14, finalY + 14);
+    
+    const unregisteredData = unregisteredSchools.map((s, index) => [
+      index + 1,
+      s
+    ]);
+
+    autoTable(doc, {
+      startY: finalY + 18,
+      head: [['#', 'School Name']],
+      body: unregisteredData,
+      theme: 'grid',
+      headStyles: { fillColor: [231, 76, 60] }
+    });
+
+    doc.save("School_Statistics_Report.pdf");
+  };
+
   return (
     <div className="admin-container animate-fade-in" style={{ paddingTop: '40px', paddingBottom: '80px', position: 'relative' }}>
       
@@ -411,10 +463,31 @@ export default function AdminDashboard() {
       {/* CAUTION / SCHOOL STATS PANEL */}
       {showCaution && (
         <div className="glass animate-fade-in" style={{ padding: '20px', borderRadius: 'var(--radius-md)', marginBottom: '16px', border: '1px solid var(--primary)' }}>
-          <h3 style={{ color: 'var(--primary)', marginBottom: '16px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-            School Statistics
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ color: 'var(--primary)', margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              School Statistics
+            </h3>
+            <button 
+              onClick={exportSchoolStatsToPDF} 
+              style={{ 
+                background: 'var(--primary)', 
+                color: 'white', 
+                border: 'none', 
+                padding: '6px 12px', 
+                borderRadius: '8px', 
+                fontSize: '0.8rem', 
+                fontWeight: '600', 
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Export PDF
+            </button>
+          </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Registered Schools */}
