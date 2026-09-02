@@ -220,7 +220,8 @@ export default function AdminDashboard() {
       const term = searchTerm.toLowerCase();
       if (!r.name?.toLowerCase().includes(term) &&
           !r.school?.toLowerCase().includes(term) &&
-          !r.regNumber?.toLowerCase().includes(term)) {
+          !r.regNumber?.toLowerCase().includes(term) &&
+          !r.phone?.toLowerCase().includes(term)) {
         return false;
       }
     }
@@ -432,7 +433,7 @@ export default function AdminDashboard() {
           className="input-field"
           style={{ width: '100%', padding: '14px', borderRadius: '12px' }}
         />
-        <div style={{ fontSize: '0.7rem', color: 'var(--secondary-text)', marginTop: '8px' }}>Search by Name, School, or Reg No</div>
+        <div style={{ fontSize: '0.7rem', color: 'var(--secondary-text)', marginTop: '8px' }}>Search by Name, Phone, School, or Reg No</div>
       </div>
 
       {loading ? (
