@@ -209,6 +209,17 @@ export default function AdminDashboard() {
   const uniquePositions = Array.from(new Set(registrations.map(r => r.position))).filter(Boolean);
   const unregisteredSchools = schools.filter(s => !uniqueSchools.includes(s));
 
+  const schoolCounts = registrations.reduce((acc: any, r: any) => {
+    if (r.school) {
+      acc[r.school] = (acc[r.school] || 0) + 1;
+    }
+    return acc;
+  }, {});
+
+  const registeredSchoolsWithCounts = Object.keys(schoolCounts)
+    .map(school => ({ school, count: schoolCounts[school] }))
+    .sort((a, b) => b.count - a.count);
+
   const filteredRegistrations = registrations.filter(r => {
     if (filterSchool && r.school !== filterSchool) return false;
     if (filterPosition && r.position !== filterPosition) return false;
@@ -397,28 +408,53 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* CAUTION PANEL */}
+      {/* CAUTION / SCHOOL STATS PANEL */}
       {showCaution && (
-        <div className="glass animate-fade-in" style={{ padding: '20px', borderRadius: 'var(--radius-md)', marginBottom: '16px', border: '1px solid rgba(255, 59, 48, 0.3)' }}>
-          <h3 style={{ color: 'var(--danger)', marginBottom: '12px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            Unregistered Schools ({unregisteredSchools.length})
+        <div className="glass animate-fade-in" style={{ padding: '20px', borderRadius: 'var(--radius-md)', marginBottom: '16px', border: '1px solid var(--primary)' }}>
+          <h3 style={{ color: 'var(--primary)', marginBottom: '16px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            School Statistics
           </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--secondary-text)', marginBottom: '16px' }}>
-            The following schools have zero registrations so far.
-          </p>
-          <div style={{ maxHeight: '300px', overflowY: 'auto', background: 'white', borderRadius: '8px', padding: '12px', border: '1px solid #e2e8f0' }}>
-            {unregisteredSchools.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {unregisteredSchools.map(s => (
-                  <li key={s} style={{ fontSize: '0.9rem', color: '#334155', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>{s}</li>
-                ))}
-              </ul>
-            ) : (
-              <div style={{ fontSize: '0.9rem', color: 'var(--success)', textAlign: 'center', padding: '12px' }}>
-                All schools have at least one registration!
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Registered Schools */}
+            <div>
+              <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--success)', marginBottom: '8px' }}>
+                Registered Schools ({registeredSchoolsWithCounts.length})
               </div>
-            )}
+              <div style={{ maxHeight: '200px', overflowY: 'auto', background: 'white', borderRadius: '8px', padding: '12px', border: '1px solid #e2e8f0' }}>
+                {registeredSchoolsWithCounts.length > 0 ? (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {registeredSchoolsWithCounts.map(s => (
+                      <li key={s.school} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#334155', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
+                        <span>{s.school}</span>
+                        <span style={{ fontWeight: '600', color: 'var(--primary)', background: 'rgba(0,198,255,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem' }}>{s.count}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div style={{ fontSize: '0.9rem', color: 'var(--secondary-text)', textAlign: 'center' }}>No registrations yet.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Unregistered Schools */}
+            <div>
+              <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--danger)', marginBottom: '8px' }}>
+                Unregistered Schools ({unregisteredSchools.length})
+              </div>
+              <div style={{ maxHeight: '200px', overflowY: 'auto', background: 'white', borderRadius: '8px', padding: '12px', border: '1px solid #e2e8f0' }}>
+                {unregisteredSchools.length > 0 ? (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {unregisteredSchools.map(s => (
+                      <li key={s} style={{ fontSize: '0.9rem', color: '#334155', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>{s}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div style={{ fontSize: '0.9rem', color: 'var(--success)', textAlign: 'center' }}>All schools have registered!</div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
