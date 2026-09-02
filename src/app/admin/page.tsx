@@ -307,6 +307,29 @@ export default function AdminDashboard() {
     doc.save("School_Statistics_Report.pdf");
   };
 
+  const exportSchoolStatsToExcel = () => {
+    const workbook = XLSX.utils.book_new();
+
+    // Registered Schools Sheet
+    const registeredData = registeredSchoolsWithCounts.map((s, index) => ({
+      "Sl No": index + 1,
+      "School Name": s.school,
+      "Registrations": s.count
+    }));
+    const registeredSheet = XLSX.utils.json_to_sheet(registeredData);
+    XLSX.utils.book_append_sheet(workbook, registeredSheet, "Registered Schools");
+
+    // Unregistered Schools Sheet
+    const unregisteredData = unregisteredSchools.map((s, index) => ({
+      "Sl No": index + 1,
+      "School Name": s
+    }));
+    const unregisteredSheet = XLSX.utils.json_to_sheet(unregisteredData);
+    XLSX.utils.book_append_sheet(workbook, unregisteredSheet, "Unregistered Schools");
+
+    XLSX.writeFile(workbook, "School_Statistics_Report.xlsx");
+  };
+
   return (
     <div className="admin-container animate-fade-in" style={{ paddingTop: '40px', paddingBottom: '80px', position: 'relative' }}>
       
@@ -468,25 +491,46 @@ export default function AdminDashboard() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
               School Statistics
             </h3>
-            <button 
-              onClick={exportSchoolStatsToPDF} 
-              style={{ 
-                background: 'var(--primary)', 
-                color: 'white', 
-                border: 'none', 
-                padding: '6px 12px', 
-                borderRadius: '8px', 
-                fontSize: '0.8rem', 
-                fontWeight: '600', 
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Export PDF
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                onClick={exportSchoolStatsToExcel} 
+                style={{ 
+                  background: 'white', 
+                  color: '#059669', 
+                  border: '1px solid #059669', 
+                  padding: '6px 12px', 
+                  borderRadius: '8px', 
+                  fontSize: '0.8rem', 
+                  fontWeight: '600', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Export Excel
+              </button>
+              <button 
+                onClick={exportSchoolStatsToPDF} 
+                style={{ 
+                  background: 'var(--primary)', 
+                  color: 'white', 
+                  border: 'none', 
+                  padding: '6px 12px', 
+                  borderRadius: '8px', 
+                  fontSize: '0.8rem', 
+                  fontWeight: '600', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Export PDF
+              </button>
+            </div>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
